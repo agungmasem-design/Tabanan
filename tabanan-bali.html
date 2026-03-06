@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tabanan</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    /* ══════════════════════════════════
+       DESIGN TOKENS
+    ══════════════════════════════════ */
+    :root {
+      --red:       #C8292A;
+      --red-dark:  #9E1F20;
+      --red-pale:  #F9EAEA;
+      --black:     #0E0E0E;
+      --charcoal:  #1C1C1C;
+      --grey-dark: #3A3A3A;
+      --grey-mid:  #767676;
+      --grey-light:#E8E4DF;
+      --cream:     #F7F4F0;
+      --white:     #FFFFFF;
+
+      --serif:  'Cormorant Garamond', Georgia, serif;
+      --sans:   'DM Sans', sans-serif;
+
+      --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* ══════════════════════════════════
+       RESET & BASE
+    ══════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--sans);
+      background: var(--cream);
+      color: var(--charcoal);
+      overflow-x: hidden;
+      cursor: none;
+    }
+    img { display: block; max-width: 100%; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── Custom cursor ── */
+    .cursor {
+      position: fixed;
+      width: 10px; height: 10px;
+      background: var(--red);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, width 0.3s var(--ease), height 0.3s var(--ease), background 0.3s;
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 38px; height: 38px;
+      border: 1.5px solid var(--red);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.18s var(--ease), width 0.35s var(--ease), height 0.35s var(--ease), opacity 0.3s;
+      opacity: 0.6;
+    }
+    body:hover .cursor, body:hover .cursor-ring { opacity: 1; }
+
+    /* ══════════════════════════════════
+       SCROLL ANIMATION
+    ══════════════════════════════════ */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(42px);
+      transition: opacity 0.85s var(--ease), transform 0.85s var(--ease);
+    }
+    .fade-up.in { opacity: 1; transform: translateY(0); }
+
+    .fade-left {
+      opacity: 0;
+      transform: translateX(-42px);
+      transition: opacity 0.85s var(--ease), transform 0.85s var(--ease);
+    }
+    .fade-left.in { opacity: 1; transform: translateX(0); }
+
+    .fade-right {
+      opacity: 0;
+      transform: translateX(42px);
+      transition: opacity 0.85s var(--ease), transform 0.85s var(--ease);
+    }
+    .fade-right.in { opacity: 1; transform: translateX(0); }
+
+    .delay-1 { transition-delay: 0.12s; }
+    .delay-2 { transition-delay: 0.24s; }
+    .delay-3 { transition-delay: 0.36s; }
+    .delay-4 { transition-delay: 0.48s; }
+    .delay-5 { transition-delay: 0.60s; }
+
+    /* ══════════════════════════════════
+       NAVBAR
+    ══════════════════════════════════ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 4vw;
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(247, 244, 240, 0.96);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 1px 0 var(--grey-light);
+    }
+
+    .nav-logo {
+      font-family: var(--serif);
+      font-size: 1.45rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      transition: color 0.4s;
+    }
+    nav.scrolled .nav-logo { color: var(--black); }
+    .nav-logo span { color: var(--red); }
+
+    .nav-links {
+      display: flex;
+      gap: 2.4rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      position: relative;
+      transition: color 0.3s;
+    }
+    nav.scrolled .nav-links a { color: var(--grey-dark); }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0;
+      width: 0; height: 1.5px;
+      background: var(--red);
+      transition: width 0.3s var(--ease);
+    }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-links a:hover { color: var(--red) !important; }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: none;
+      padding: 4px;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px; height: 1.5px;
+      background: var(--white);
+      transition: background 0.3s, transform 0.3s;
+    }
+    nav.scrolled .hamburger span { background: var(--charcoal); }
+    .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    .nav-mobile {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      background: var(--black);
+      z-index: 850;
+      align-items: center;
+      justify-content: center;
+      gap: 2.5rem;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile a {
+      font-family: var(--serif);
+      font-size: 2.4rem;
+      color: var(--white);
+      font-weight: 300;
+      letter-spacing: 0.05em;
+      transition: color 0.2s;
+    }
+    .nav-mobile a:hover { color: var(--red); }
+
+    /* ══════════════════════════════════
+       HERO / JUMBOTRON
+    ══════════════════════════════════ */
+    #hero {
+      height: 100vh;
+      min-height: 600px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+
+    /* Layered background using CSS gradients representing Tabanan's rice terraces */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, rgba(14,14,14,0.2) 0%, rgba(14,14,14,0.65) 100%),
+        linear-gradient(160deg, #1a3a2e 0%, #2d5e3e 25%, #4a7c52 45%, #3d6b45 60%, #c8292a22 100%);
+      /* Simulated rice terrace layering with shapes */
+    }
+
+    /* Decorative terrace lines */
+    .hero-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          -8deg,
+          transparent,
+          transparent 60px,
+          rgba(255,255,255,0.025) 60px,
+          rgba(255,255,255,0.025) 61px
+        );
+    }
+
+    /* Red accent stripe */
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 15%;
+      width: 2px;
+      height: 45%;
+      background: var(--red);
+      opacity: 0.7;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 0 6vw 8vh;
+      max-width: 900px;
+    }
+
+    .hero-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .hero-eyebrow-line {
+      width: 40px; height: 1px;
+      background: var(--red);
+    }
+    .hero-eyebrow span {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+    }
+
+    .hero-title {
+      font-family: var(--serif);
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 300;
+      line-height: 1.0;
+      color: var(--white);
+      margin-bottom: 0.3rem;
+    }
+    .hero-title em {
+      font-style: italic;
+      color: var(--white);
+    }
+    .hero-title .accent { color: var(--red); font-style: normal; }
+
+    .hero-sub {
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      color: rgba(255,255,255,0.72);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 500px;
+      margin-top: 1.2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.9rem;
+      color: var(--white);
+      font-size: 0.82rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(255,255,255,0.35);
+      padding-bottom: 0.4rem;
+      transition: border-color 0.3s, color 0.3s, gap 0.3s;
+    }
+    .hero-cta:hover { border-color: var(--red); color: var(--red); gap: 1.4rem; }
+    .hero-cta svg { transition: transform 0.3s; }
+    .hero-cta:hover svg { transform: translateX(4px); }
+
+    /* scroll indicator */
+    .scroll-ind {
+      position: absolute;
+      bottom: 2.5rem; right: 4vw;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .scroll-ind span {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      writing-mode: vertical-rl;
+    }
+    .scroll-ind-line {
+      width: 1px; height: 50px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+      animation: scrollLine 1.8s ease-in-out infinite;
+    }
+    @keyframes scrollLine {
+      0%   { transform: scaleY(0); transform-origin: top; }
+      50%  { transform: scaleY(1); transform-origin: top; }
+      51%  { transform: scaleY(1); transform-origin: bottom; }
+      100% { transform: scaleY(0); transform-origin: bottom; }
+    }
+
+    /* Hero stats strip */
+    .hero-stats {
+      position: absolute;
+      bottom: 0; right: 0;
+      z-index: 3;
+      display: flex;
+    }
+    .stat-box {
+      background: var(--white);
+      padding: 1.4rem 2rem;
+      border-left: 1px solid var(--grey-light);
+      text-align: center;
+    }
+    .stat-box:first-child { background: var(--red); }
+    .stat-box:first-child .stat-n,
+    .stat-box:first-child .stat-l { color: var(--white); }
+    .stat-n {
+      font-family: var(--serif);
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: var(--charcoal);
+      line-height: 1;
+    }
+    .stat-l {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--grey-mid);
+      margin-top: 0.25rem;
+    }
+
+    /* ══════════════════════════════════
+       SECTION COMMONS
+    ══════════════════════════════════ */
+    section { padding: 7rem 6vw; }
+    section:nth-child(even) { background: var(--white); }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 28px; height: 1.5px;
+      background: var(--red);
+    }
+    .section-label span {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--red);
+      font-weight: 500;
+    }
+
+    .section-title {
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+      font-weight: 300;
+      line-height: 1.12;
+      color: var(--black);
+      max-width: 680px;
+      margin-bottom: 1rem;
+    }
+    .section-title em { font-style: italic; color: var(--red); }
+
+    .section-desc {
+      font-size: 0.95rem;
+      color: var(--grey-mid);
+      line-height: 1.8;
+      max-width: 520px;
+      font-weight: 300;
+    }
+
+    /* ══════════════════════════════════
+       WISATA SECTION
+    ══════════════════════════════════ */
+    #wisata { background: var(--cream); }
+
+    .wisata-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 1.5px;
+      margin-top: 4rem;
+      background: var(--grey-light);
+    }
+
+    /* Featured card — spans full width */
+    .wisata-featured {
+      grid-column: 1 / -1;
+      background: var(--charcoal);
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      min-height: 340px;
+    }
+    .wisata-featured-img {
+      background: linear-gradient(135deg, #1a4a2e 0%, #2d6e42 50%, #4a8c5e 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+    }
+    .wisata-featured-img::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, transparent 60%, var(--charcoal));
+    }
+    .wisata-featured-body {
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .wisata-featured-body .card-tag {
+      color: var(--red);
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.9rem;
+    }
+    .wisata-featured-body h3 {
+      font-family: var(--serif);
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .wisata-featured-body p {
+      color: rgba(255,255,255,0.65);
+      font-size: 0.9rem;
+      line-height: 1.75;
+      font-weight: 300;
+    }
+    .wisata-featured-body .card-meta {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .card-meta-item { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+    .card-meta-item strong { display: block; color: rgba(255,255,255,0.85); font-weight: 500; }
+
+    /* Regular wisata cards */
+    .wisata-card {
+      background: var(--white);
+      padding: 2.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .wisata-card::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--red);
+      transition: width 0.4s var(--ease);
+    }
+    .wisata-card:hover::before { width: 100%; }
+    .wisata-card:hover { background: var(--cream); }
+
+    .card-number {
+      font-family: var(--serif);
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--grey-light);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      transition: color 0.3s;
+    }
+    .wisata-card:hover .card-number { color: var(--red-pale); }
+    .card-tag {
+      font-size: 0.67rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--red);
+      font-weight: 500;
+      margin-bottom: 0.6rem;
+    }
+    .wisata-card h4 {
+      font-family: var(--serif);
+      font-size: 1.45rem;
+      font-weight: 400;
+      color: var(--black);
+      margin-bottom: 0.7rem;
+      line-height: 1.2;
+    }
+    .wisata-card p {
+      font-size: 0.87rem;
+      color: var(--grey-mid);
+      line-height: 1.75;
+      font-weight: 300;
+    }
+    .card-info {
+      display: flex;
+      gap: 1.2rem;
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--grey-light);
+      font-size: 0.75rem;
+      color: var(--grey-mid);
+    }
+    .card-info strong { color: var(--charcoal); font-weight: 500; display: block; }
+
+    /* Wisata icon strip */
+    .wisata-card-icon {
+      position: absolute;
+      top: 1.5rem; right: 1.8rem;
+      font-size: 2.2rem;
+      opacity: 0.2;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .wisata-card:hover .wisata-card-icon { opacity: 0.5; transform: scale(1.1); }
+
+    /* ══════════════════════════════════
+       KULINER SECTION
+    ══════════════════════════════════ */
+    #kuliner {
+      background: var(--black);
+      color: var(--white);
+    }
+    #kuliner .section-title { color: var(--white); }
+    #kuliner .section-desc { color: rgba(255,255,255,0.5); }
+
+    .kuliner-intro {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: end;
+      margin-bottom: 4rem;
+    }
+
+    .kuliner-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: rgba(255,255,255,0.08);
+      margin-top: 1rem;
+    }
+
+    .kuliner-item {
+      background: var(--black);
+      padding: 2rem 1.8rem;
+      position: relative;
+      border-top: 2px solid transparent;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .kuliner-item:hover {
+      border-color: var(--red);
+      background: rgba(200,41,42,0.06);
+    }
+
+    .kuliner-emoji {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .kuliner-item h5 {
+      font-family: var(--serif);
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: var(--white);
+      margin-bottom: 0.6rem;
+      line-height: 1.2;
+    }
+    .kuliner-item p {
+      font-size: 0.84rem;
+      color: rgba(255,255,255,0.48);
+      line-height: 1.75;
+      font-weight: 300;
+    }
+    .kuliner-tag {
+      display: inline-block;
+      margin-top: 0.9rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--red);
+      border: 1px solid rgba(200,41,42,0.4);
+      padding: 0.25rem 0.7rem;
+      border-radius: 1px;
+    }
+
+    /* Kuliner highlight bar */
+    .kuliner-highlight {
+      margin-top: 3.5rem;
+      background: var(--red);
+      padding: 2.5rem 3rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 2rem;
+    }
+    .kuliner-highlight h4 {
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      color: var(--white);
+      font-weight: 300;
+    }
+    .kuliner-highlight p {
+      color: rgba(255,255,255,0.75);
+      font-size: 0.88rem;
+      line-height: 1.65;
+      margin-top: 0.4rem;
+    }
+    .kuliner-highlight-badge {
+      font-family: var(--serif);
+      font-size: 3.5rem;
+      color: rgba(255,255,255,0.25);
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════
+       DO & DON'T SECTION
+    ══════════════════════════════════ */
+    #tips { background: var(--cream); }
+
+    .tips-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 4rem;
+      background: var(--grey-light);
+    }
+
+    .tips-col {
+      background: var(--white);
+      padding: 3rem;
+    }
+    .tips-col.dont-col { background: var(--cream); }
+
+    .tips-col-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--grey-light);
+    }
+    .tips-col-icon {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .do-icon { background: var(--black); color: var(--white); }
+    .dont-icon { background: var(--red); color: var(--white); }
+
+    .tips-col-header h3 {
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      font-weight: 400;
+      color: var(--black);
+    }
+
+    .tip-row {
+      display: flex;
+      gap: 1.1rem;
+      margin-bottom: 1.6rem;
+      align-items: flex-start;
+    }
+    .tip-marker {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem;
+      font-weight: 700;
+    }
+    .do-marker { background: rgba(14,14,14,0.08); color: var(--charcoal); border: 1.5px solid var(--charcoal); }
+    .dont-marker { background: var(--red-pale); color: var(--red); border: 1.5px solid var(--red); }
+
+    .tip-content strong {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--charcoal);
+      margin-bottom: 0.3rem;
+    }
+    .tip-content p {
+      font-size: 0.83rem;
+      color: var(--grey-mid);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* Tips quick badges */
+    .tips-quick {
+      margin-top: 3rem;
+      background: var(--black);
+      padding: 2.5rem 3rem;
+    }
+    .tips-quick h4 {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      color: var(--white);
+      font-weight: 400;
+      margin-bottom: 1.2rem;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+    .tip-badge {
+      font-size: 0.73rem;
+      font-weight: 400;
+      padding: 0.4rem 1rem;
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.05em;
+      transition: border-color 0.25s, color 0.25s;
+    }
+    .tip-badge:hover { border-color: var(--red); color: var(--white); }
+
+    /* ══════════════════════════════════
+       FOOTER
+    ══════════════════════════════════ */
+    footer {
+      background: var(--charcoal);
+      padding: 5rem 6vw 3rem;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 4rem;
+      padding-bottom: 3.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 2.5rem;
+    }
+
+    .footer-brand {
+      font-family: var(--serif);
+      font-size: 1.8rem;
+      font-weight: 300;
+      color: var(--white);
+      margin-bottom: 1rem;
+    }
+    .footer-brand span { color: var(--red); }
+    .footer-desc {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.8;
+      font-weight: 300;
+      max-width: 280px;
+    }
+
+    .footer-col h6 {
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 1.3rem;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 0.65rem; }
+    .footer-col a {
+      font-size: 0.87rem;
+      color: rgba(255,255,255,0.6);
+      transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--red); }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.25);
+    }
+    .footer-dot {
+      width: 6px; height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+    }
+
+    /* ══════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════ */
+    @media (max-width: 900px) {
+      nav { padding: 1.2rem 5vw; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      section { padding: 5rem 5vw; }
+
+      .wisata-featured { grid-template-columns: 1fr; min-height: auto; }
+      .wisata-featured-img { height: 200px; }
+      .wisata-grid { grid-template-columns: 1fr; }
+
+      .kuliner-intro { grid-template-columns: 1fr; gap: 1.5rem; }
+      .kuliner-list { grid-template-columns: 1fr; }
+
+      .tips-layout { grid-template-columns: 1fr; }
+
+      .footer-top { grid-template-columns: 1fr; gap: 2.5rem; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+
+      .hero-stats { position: static; margin-top: 3rem; display: flex; flex-wrap: wrap; }
+      .stat-box { flex: 1; min-width: 80px; }
+
+      .kuliner-highlight { grid-template-columns: 1fr; }
+      .kuliner-highlight-badge { display: none; }
+
+      .tips-quick { padding: 2rem; }
+      .wisata-featured-body { padding: 2rem; }
+    }
+
+    @media (max-width: 600px) {
+      .hero-title { font-size: 2.8rem; }
+      .hero-content { padding: 0 5vw 10vh; }
+      .scroll-ind { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- Mobile nav overlay -->
+  <div class="nav-mobile" id="mobileNav">
+    <a href="#wisata" onclick="closeMobile()">Wisata</a>
+    <a href="#kuliner" onclick="closeMobile()">Kuliner</a>
+    <a href="#tips" onclick="closeMobile()">Tips</a>
+    <a href="#footer" onclick="closeMobile()">Kontak</a>
+  </div>
+
+  <!-- ════════════════════════════════
+       NAVBAR
+  ════════════════════════════════ -->
+  <nav id="navbar">
+    <a href="#hero" class="nav-logo">Taba<span>nan</span></a>
+    <ul class="nav-links">
+      <li><a href="#wisata">Wisata</a></li>
+      <li><a href="#kuliner">Kuliner</a></li>
+      <li><a href="#tips">Panduan</a></li>
+      <li><a href="#footer">Kontak</a></li>
+    </ul>
+    <div class="hamburger" id="hamburger" onclick="toggleMobile()">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- ════════════════════════════════
+       HERO
+  ════════════════════════════════ -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow fade-up">
+        <div class="hero-eyebrow-line"></div>
+        <span>Kabupaten Tabanan · Bali Barat</span>
+      </div>
+      <h1 class="hero-title fade-up delay-1">
+        Bali yang<br>
+        <em>belum</em> <span class="accent">pernah</span><br>
+        kamu lihat.
+      </h1>
+      <p class="hero-sub fade-up delay-2">
+        Sawah terasering, pemandangan danau, pantai tersembunyi, dan kuliner yang
+        khas membuat Tabanan menawarkan Bali dalam bentuknya yang paling murni.
+      </p>
+      <a href="#wisata" class="hero-cta fade-up delay-3">
+        Mulai Menjelajah
+        <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
+          <path d="M1 6h18M14 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="scroll-ind">
+      <div class="scroll-ind-line"></div>
+      <span>Scroll</span>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-box">
+        <div class="stat-n">30+</div>
+        <div class="stat-l">Destinasi</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-n">10</div>
+        <div class="stat-l">Kecamatan</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-n">4.9</div>
+        <div class="stat-l">Rating Wisata</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       WISATA
+  ════════════════════════════════ -->
+  <section id="wisata">
+    <div class="section-label fade-up">
+      <span>Rekomendasi Destinasi</span>
+    </div>
+    <h2 class="section-title fade-up delay-1">
+      Enam tempat yang akan<br>membuat kamu <em>jatuh cinta</em>
+    </h2>
+    <p class="section-desc fade-up delay-2">
+      Dari terasiring sawah UNESCO hingga pantai sunyi yang tersembunyi di balik tebing
+      — Tabanan menyimpan keajaiban di setiap tikungannya.
+    </p>
+
+    <div class="wisata-grid fade-up delay-2">
+
+      <!-- Featured -->
+      <div class="wisata-featured">
+         <img src="jatiluwih.jpeg"class="jtwl-img">
+        <div class="wisata-featured-body">
+          <div class="card-tag">✦ Warisan Dunia UNESCO</div>
+          <h3>Jatiluwih Rice<br>Terraces</h3>
+          <p>Hamparan terasiring sawah seluas 656 hektare yang telah diakui UNESCO sejak 2012. Sistem irigasi subak yang diwariskan sejak abad ke-11 ini adalah simbol harmoni antara manusia, alam, dan Tuhan dalam filosofi Tri Hita Karana.</p>
+          <div class="card-meta">
+            <div class="card-meta-item">
+              <strong>Penebel, Tabanan</strong>
+              Lokasi
+            </div>
+            <div class="card-meta-item">
+              <strong>07.00 – 18.00</strong>
+              Jam Buka
+            </div>
+            <div class="card-meta-item">
+              <strong>Rp 40.000</strong>
+              Tiket Masuk
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 1 -->
+      <div class="wisata-card fade-up delay-1">
+        <div class="wisata-card-icon">🌊</div>
+        <div class="card-number">02</div>
+        <div class="card-tag">Pantai</div>
+        <img src="kutikan.jpeg" class="wisata-img">
+        <h4>Pantai Kutikan</h4>
+        <p>Pantai berombak besar favorit para peselancar dunia. Suasana tenang, minim keramaian, dan sunset dramatis di balik muara sungai yang membelah pasir hitam vulkanik.</p>
+        <div class="card-info">
+          <div><strong>Beraban</strong>Lokasi</div>
+          <div><strong>Gratis</strong>Tiket</div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="wisata-card fade-up delay-2">
+        <div class="wisata-card-icon">🌊</div>
+        <div class="card-number">03</div>
+        <div class="card-tag">Pantai</div>
+        <img src="pantai bonian.jpeg" class="wisata-img">
+        <h4>Pantai Bonian</h4>
+        <p>Pantai dengan pemandangan ombak dan perpaduan terumbu karang yang indah </p>
+        <div class="card-info">
+          <div><strong>Selemadeg Barat</strong>Lokasi</div>
+          <div><strong>Free</strong>Tiket</div>
+      
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="wisata-card fade-up delay-1">
+        <div class="wisata-card-icon">🏊</div>
+
+        <div class="card-number">04</div>
+        <div class="card-tag">Air Terjun</div>
+        <img src="pengempu wtrfll.jpeg"class="wisata-img">
+        <h4>Pengempu Waterfall</h4>
+        <p>Air terjun bertingkat yang tersembunyi di tengah hutan lebat Tabanan. Trek 45 menit melewati sungai kecil dan sawah — pengalaman offtrack yang memanjakan jiwa petualang sejati.</p>
+        <div class="card-info">
+          <div><strong>Cau Blayu</strong>lokasi</div>
+          <div><strong>Rp 20.000</strong>Tiket</div>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="wisata-card fade-up delay-2">
+        <div class="wisata-card-icon">🦋</div>
+        <div class="card-number">05</div>
+        <div class="card-tag">Alam & Perkebunan</div>
+        <img src="kebun raya.jpeg" class="wisata-img">
+        <h4>Kebun Raya Bedugul</h4>
+        <p>Kebun raya seluas 157,5 hektare di ketinggian 1.250 mdpl dengan koleksi lebih dari 2.000 spesies tanaman tropis. Udara sejuk, kabut pagi, dan danau yang memukau mengelilingi tempat ini.</p>
+        <div class="card-info">
+          <div><strong>Baturiti</strong>Lokasi</div>
+          <div><strong>Rp 30.000</strong>Tiket</div>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="wisata-card fade-up delay-3">
+        <div class="wisata-card-icon">🎭</div>
+        <div class="card-number">06</div>
+        <div class="card-tag">Alam & Rekreasi</div>
+        <img src="yeh aya hulu.jpeg"alt="Yeh aya hulu"class="wisata-img">
+        <h4>Bendungan Yeh Aya Hulu</h4>
+        <p>Tempat rekreasi alam menyusuri sungai dengan pelampung dan menikmati pegunungan serta pemandangan sawah.</p>
+        <div class="card-info">
+          <div><strong>Jatiluwih</strong>Lokasi</div>
+          <div><strong>free</strong>Tiket</div>
+            <div><strong>Rp 10.000</strong>Bayar Pelampung</div>
+        </div>
+      </div>
+    
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       KULINER
+  ════════════════════════════════ -->
+  <section id="kuliner">
+    <div class="kuliner-intro">
+      <div>
+        <div class="section-label fade-left">
+          <span>Kuliner Khas</span>
+        </div>
+        <h2 class="section-title fade-left delay-1">
+         Tempat kuliner<em>autentik</em><br> di Tabanan 
+        </h2>
+      </div>
+      <div class="fade-right delay-1">
+        <p class="section-desc">
+          Tabanan dikenal sebagai lumbung pangan Bali. Tak heran jika kulinernya
+          kaya akan bahan-bahan segar langsung dari ladang dan laut — dimasak
+          dengan bumbu rempah yang pekat dan penuh karakter.
+        </p>
+      </div>
+    </div>
+
+    <div class="kuliner-list">
+
+      <div class="kuliner-item fade-up delay-1">
+        <h5>Nyarik Kopi</h5>
+        <img src="nyarik kopi.jpeg"class="wisata-img">
+        <p>Kedai kopi populer di Tabanan yang dikenal dengan suasana santai, pemandangan gunung dan konsep modern minimalis.</p>
+        <span class="kuliner-tag">Wongaya Gede</span>
+      </div>
+
+      <div class="kuliner-item fade-up delay-2">
+        <h5>Uma Batukaru</h5>
+        <img src="uma batukaru.webp"class="wisata-img">
+        <p>Kafe di tengah sawah yang menyediakan kuliner khas tabanan mulai dari ayam bakar hingga seafood.</p>
+        <span class="kuliner-tag">Sanggulan, Tabanan</span>
+      </div>
+
+      <div class="kuliner-item fade-up delay-3">
+        <h5>Nasi Bejeg Tabanan</h5>
+        <img src="bejeg 2.jfif"class="wisata-img">
+        <p>Makanan khas tabanan yang dimana sebuah nasi di campur rempah rempah dan sayuran kemudian di aduk dan disajikan.</p>
+        <span class="kuliner-tag">Tabanan</span>
+      </div>
+
+      <div class="kuliner-item fade-up delay-1">
+        <h5>DeLook Warung</h5>
+        <img src="delok.jfif"class="wisata-img">
+        <p>Sebuah warung di tengah sawah yang menyajikan menu masakan lokal dan western. Menyajikan menu khas Tabanan yang menggoyahkan selera makan.</p>
+        <span class="kuliner-tag">Denbatas, Tabanan</span>
+      </div>
+
+      <div class="kuliner-item fade-up delay-2">
+        <h5>Kamani Cafe</h5>
+         <img src="kami cafe.jfif"class="wisata-img">
+        <p>Sebuah cafe yang berada di dataran tinggi dengan udara yang sejuk dan pemandangan gunung yang indah. Sangat cocok untuk bersantai sambil melepas penat dengan saudara, teman, atau keluarga. </p>
+        <span class="kuliner-tag">Baturiti, Tabanan</span>
+      </div>
+
+      <div class="kuliner-item fade-up delay-3">
+        <h5>Uma Manis</h5>
+         <img src="manis.jpg"class="wisata-img">
+        <p>Tempat yang menyajikan jajanan tradisional khas tabanan dengan harga yang terjangkau, berada di kawasan pedesaan yang sangat cocok untuk menikmati jajan tradisional tersebut. </p>
+        <span class="kuliner-tag">Penebel, Tabanan</span>
+      </div>
+
+    </div>
+
+    <div class="kuliner-highlight fade-up delay-2">
+      <div>
+        <h4>Pasar Tabanan — surga kuliner di Kota Tabanan</h4>
+        <p>Datanglah setiap hari untuk menemukan jajanan pasar terlengkap, bumbu bali segar, dan interaksi autentik dengan warga lokal yang ramah. Pengalaman belanja yang tidak akan kamu temukan di tempat lain.</p>
+      </div>
+      <div class="kuliner-highlight-badge"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       DO & DON'T
+  ════════════════════════════════ -->
+  <section id="tips">
+    <div class="section-label fade-up">
+      <span>Panduan Wisatawan</span>
+    </div>
+    <h2 class="section-title fade-up delay-1">
+      Hal yang perlu kamu<br>tahu sebelum ke <em>Tabanan</em>
+    </h2>
+    <p class="section-desc fade-up delay-2">
+      Saling menghormati adalah kunci pengalaman
+      wisata yang bermakna bagi kamu dan bagi masyarakat lokal.
+    </p>
+
+    <div class="tips-layout fade-up delay-2">
+
+      <!-- DO -->
+      <div class="tips-col">
+        <div class="tips-col-header">
+          <div class="tips-col-icon do-icon">✓</div>
+          <h3>Yang Sebaiknya Dilakukan</h3>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker do-marker">✓</div>
+          <div class="tip-content">
+            <strong>Selalu update berita mengenai cuaca</strong>
+            <p>Setiap tempat wisata tentu memiliki cuaca yang berbeda, selalu update berita mengenai cuaca sangatlah penting untuk mencegah hal yang tidak diinginkan. </p>
+          </div>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker do-marker">✓</div>
+          <div class="tip-content">
+            <strong>Hormati sesajen dan ritual di pinggir jalan</strong>
+            <p>Canang sari (persembahan kecil) yang diletakkan di tanah atau di depan toko adalah hal sakral. Melangkahinya adalah tindakan yang sangat tidak sopan, selalu hindari atau langkahi dengan izin jika terpaksa.</p>
+          </div>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker do-marker">✓</div>
+          <div class="tip-content">
+            <strong>Beli produk lokal dan dukung UMKM Tabanan</strong>
+            <p>Kopi, kerajinan bambu, dan tenun khas Tabanan adalah oleh-oleh terbaik yang sekaligus mendukung penghidupan pengrajin lokal. Belanja di pasar tradisional dibanding minimarket untuk pengalaman lebih autentik.</p>
+          </div>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker do-marker">✓</div>
+          <div class="tip-content">
+            <strong>Patuhi jalur trekking dan tanda larangan</strong>
+            <p>Di Jatiluwih khususnya, tetap di jalur yang telah ditentukan agar tidak merusak pematang sawah yang merupakan bagian dari ekosistem subak yang dilindungi UNESCO.</p>
+          </div>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker do-marker">✓</div>
+          <div class="tip-content">
+            <strong>Tanya izin sebelum memotret warga lokal</strong>
+            <p>Masyarakat Tabanan sangat terbuka, namun menghargai privasi mereka. Meminta izin sebelum memotret — terutama saat mereka sedang bekerja di sawah atau melakukan ritual — adalah gestur yang sangat dihargai.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- DON'T -->
+      <div class="tips-col dont-col">
+        <div class="tips-col-header">
+          <div class="tips-col-icon dont-icon">✕</div>
+          <h3>Yang Harus Dihindari</h3>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker dont-marker">✕</div>
+          <div class="tip-content">
+            <strong>Jangan masuk area suci secara sembarangan</strong>
+            <p>Setiap tempat wisata di Tabanan tentu memiliki area suci, minta izin kepada masyarakat lokal sebelum memasuki nya.</p>
+          </div>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker dont-marker">✕</div>
+          <div class="tip-content">
+            <strong>Jangan berenang di pantai berombak tanpa izin</strong>
+            <p>Pantai Tabanan seperti Kutikan dan Bonian memiliki arus bawah laut yang sangat kuat dan berbahaya. Selalu patuhi rambu larangan berenang dan instruksi penjaga pantai, nyawa lebih berharga dari foto instagramable.</p>
+          </div>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker dont-marker">✕</div>
+          <div class="tip-content">
+            <strong>Jangan sesekali mengejek orang lain</strong>
+            <p>Walaupun itu orang lokal atau wisatawan, mejaga sikap saling menghormati adalah suatu tindakan untuk mencegah keributan demi memwujudkan kenyamanan dan keamanan saat berwisata.</p>
+          </div>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker dont-marker">✕</div>
+          <div class="tip-content">
+            <strong>Jangan buang sampah sembarangan di sawah & pantai</strong>
+            <p>Tabanan sedang berjuang keras menjaga lingkungannya. Plastik yang dibuang ke sawah merusak sistem irigasi subak. Selalu bawa kantong sendiri dan buang sampah di tempat yang tersedia.</p>
+          </div>
+        </div>
+
+        <div class="tip-row">
+          <div class="tip-marker dont-marker">✕</div>
+          <div class="tip-content">
+            <strong>Jangan menawar dengan harga terlalu rendah yang merendahkan</strong>
+            <p>Menawar adalah hal wajar, namun menawar dengan harga yang tidak masuk akal dari pengrajin atau petani lokal merupakan tindakan yang merendahkan kerja keras mereka. Hargai produk lokal dengan nilai yang layak.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick tips -->
+    <div class="tips-quick fade-up delay-3">
+      <h4>Tips Cepat Perjalanan</h4>
+      <div class="badge-row">
+        <div class="tip-badge">🌤 Musim Kering: Mei – Oktober</div>
+        <div class="tip-badge">🛵 Sewa motor untuk fleksibilitas maksimal</div>
+        <div class="tip-badge">🌄 Kunjungi Jatiluwih pagi hari (06.00–09.00)</div>
+        <div class="tip-badge">🔌 Bawa powerbank – sinyal bervariasi</div>
+        <div class="tip-badge">💵 Siapkan uang tunai untuk warung lokal</div>
+        <div class="tip-badge">🌿 Hindari plastik sekali pakai</div>
+        <div class="tip-badge">📍 Unduh peta offline sebelum berangkat</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       FOOTER
+  ════════════════════════════════ -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="fade-up">
+        <div class="footer-brand">Taba<span>nan</span></div>
+        <p class="footer-desc">Panduan perjalanan independen untuk menjelajahi Tabanan — sisi Bali yang autentik, tenang, dan tak terlupakan. Dibuat dengan cinta untuk para pejalan yang ingin lebih dari sekadar wisata mainstream.</p>
+      </div>
+      <div class="footer-col fade-up delay-1">
+        <h6>Jelajahi</h6>
+        <ul>
+          <li><a href="#wisata">Destinasi Wisata</a></li>
+          <li><a href="#kuliner">Kuliner Khas</a></li>
+          <li><a href="#tips">Panduan Wisatawan</a></li>
+          <li><a href="#hero">Tentang Tabanan</a></li>
+        </ul>
+      </div>
+      <div class="footer-col fade-up delay-2">
+        <h6>Informasi</h6>
+        <ul>
+          <li><a href="#">Cara Menuju Tabanan</a></li>
+          <li><a href="#">Penginapan Lokal</a></li>
+          <li><a href="#">Kalender Upacara</a></li>
+          <li><a href="#">Kontak Kami</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom fade-up">
+      <span>© 2024 Tabanan — Bali Sejati. Dibuat untuk para pejalan yang menghargai kedalaman.</span>
+      <div class="footer-dot"></div>
+      <span>Daerah Istimewa Tabanan, Bali, Indonesia</span>
+    </div>
+  </footer>
+
+  <script>
+    // ── Custom Cursor ──
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    function animCursor() {
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+      rx += (mx - rx) * 0.15; ry += (my - ry) * 0.15;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(animCursor);
+    }
+    animCursor();
+    document.querySelectorAll('a, button, .wisata-card, .kuliner-item, .tip-badge').forEach(el => {
+      el.addEventListener('mouseenter', () => { cursor.style.width = '18px'; cursor.style.height = '18px'; ring.style.width = '56px'; ring.style.height = '56px'; ring.style.opacity = '0.3'; });
+      el.addEventListener('mouseleave', () => { cursor.style.width = '10px'; cursor.style.height = '10px'; ring.style.width = '38px'; ring.style.height = '38px'; ring.style.opacity = '0.6'; });
+    });
+
+    // ── Navbar scroll ──
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // ── Mobile nav ──
+    const ham = document.getElementById('hamburger');
+    const mobileNav = document.getElementById('mobileNav');
+    function toggleMobile() {
+      ham.classList.toggle('open');
+      mobileNav.classList.toggle('open');
+    }
+    function closeMobile() {
+      ham.classList.remove('open');
+      mobileNav.classList.remove('open');
+    }
+
+    // ── Scroll Fade Animations ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.fade-up, .fade-left, .fade-right').forEach(el => {
+      observer.observe(el);
+    });
+
+    // ── Hero elements animate on load ──
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.querySelectorAll('#hero .fade-up').forEach(el => el.classList.add('in'));
+      }, 200);
+    });
+  </script>
+</body>
+</html>
